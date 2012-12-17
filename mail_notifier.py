@@ -6,9 +6,6 @@ Works by keeping track of unread mail and notifying user when it increases.
 
 TODO: license (GPL v. 3)
 
-TODO: handle case where mail client not running
-    so can't get numbers from it
-
 TODO: program arguments
     config file?
 
@@ -36,13 +33,12 @@ SLEEP_TIME = 10
 CLAWS_MAIL_NOT_RUNNING = '0 Claws Mail not running.'
 
 
-class mail_info:
+class MailInfo:
     '''
-    Probably overkill, but made it cleaner IMO. Could also use numpy ndarrays,
-    but that's way overkill. And is a completely unnecessary dependency.
+    Probably overkill, but made it cleaner IMO. Also allows for future
+    expansion.
 
-    The idea is based off of numpy ndarrays. We may expand this to do more
-    stuff later too.
+    The idea is based off of numpy ndarrays.
     '''
     def __init__(self, new, unread, total):
         self.new = new
@@ -50,10 +46,11 @@ class mail_info:
         self.total = total
 
     def __repr__(self):
-        return 'mail_info(%d, %d, %d)' % (self.new, self.unread, self.total)
+        return 'MailInfo(%d, %d, %d)' % (self.new, self.unread, self.total)
     
     def __str__(self):
-        return 'mail_info: %d new, %d unread, %d total' % (self.new, self.unread, self.total)
+        return 'MailInfo: %d new, %d unread, %d total' \
+                     % (self.new, self.unread, self.total)
 
     def as_tuple(self):
         '''
@@ -70,7 +67,7 @@ class mail_info:
         @TODO Should this be a method, or is it alright as __gt__?
             A design issue (ie: indicating semantics).
 
-        @return tuple of bools (new_gt, unread_gt, total_gt).
+        @return tuple of booleans (new_gt, unread_gt, total_gt).
         '''
         return (self.new > other.new,
                 self.unread > other.unread,
@@ -80,10 +77,10 @@ class mail_info:
         '''
         Does a subtraction between all 3 numbers.
 
-        @return new mail_info object with the new, unread, total numbers being
+        @return new MailInfo object with the new, unread, total numbers being
         self's - other's numbers.
         '''
-        return mail_info(self.new - other.new,
+        return MailInfo(self.new - other.new,
                         self.unread - other.unread,
                         self.total - other.total)
 
@@ -93,15 +90,16 @@ def get_number_mail():
     This function is dependent on what mail client you use. I use claws and to
     keep it simple, I just hard-coded it.
 
-    @return mail_info if was able to get the data. None if not.
+    @return MailInfo if was able to get the data. None if not.
     '''
-    data = subprocess.check_output(['claws-mail', '--status'], universal_newlines=True)
+    data = subprocess.check_output(['claws-mail', '--status'],
+                                    universal_newlines=True)
 
     if data.strip() == CLAWS_MAIL_NOT_RUNNING:
         return None
 
     data = tuple(map(int, data.split()))
-    return mail_info(data[0], data[1], data[2])
+    return MailInfo(data[0], data[1], data[2])
 
 
 def notify(diff_new, diff_unread):
@@ -114,13 +112,19 @@ def notify(diff_new, diff_unread):
     msg = '%d new and %d unread mail arrived' % (diff_new, diff_unread)
 
     # TODO: icon?
-    n = notify2.Notification('New Mail', msg)
-    n.set_category('email.arrived')
+    notif = notify2.Notification('New Mail', msg)
+    notif.set_category('email.arrived')
     # TODO: urgency?
-    n.show()
+    notif.show()
 
 
 def main():
+    '''
+    Main function.
+
+    Loop which continuously checks the number of new/unread messages and
+    notifies if either increases.
+    '''
     notify2.init('mail_notifier')
 
     prev_number = None
