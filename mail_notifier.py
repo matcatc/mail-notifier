@@ -131,6 +131,8 @@ def notify(diff_new, diff_unread):
     notif = notify2.Notification('New Mail', msg)
     notif.set_category('email.arrived')
     # TODO: urgency?
+
+    # TODO: show() sometimes fails with a DBusException
     notif.show()
 
 
