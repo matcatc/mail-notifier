@@ -3,11 +3,32 @@ README
 :author: Matthew Todd
 :date: Dec 16, 2012
 
+
+Introduction
+------------
+
 This is a simple script which monitors the current number of unread mail in
 order to determine whether a new one has arrived.
 
-I found this to be necessary b/c some IMAP servers would report new mail as
+I found this to be necessary because some IMAP servers would report new mail as
 simple unread. Perhaps its an issue with my mail client (claws-mail), but
 either way, its something I want to fix.
 
+Since the script started as simple something to scratch an itch, don't expect
+to be completely fully featured for every conceivable (or many) scenarios. But
+the skeleton is there, so it should be easy to adjust it to your needs. You can
+always contact me 
+
+
+License
+-------
+
+Licensed under GNU GPL v. 3.
+
+Contact
+-------
+
+You can contact me via Github (username matcatc) or email
+(matcatprg@yahoo.com). Note that I might take a while to get back to you, as
+I'm usually rather busy.
 
