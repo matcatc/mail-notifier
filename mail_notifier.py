@@ -51,6 +51,10 @@ class MailInfo:
     expansion.
 
     The idea is based off of numpy ndarrays.
+
+    @param new Number of new mail. Subset of unread.
+    @param unread Number of unread mail. Subset of total.
+    @param total Number of total mail.
     '''
     def __init__(self, new, unread, total):
         self.new = new
@@ -147,6 +151,9 @@ def main():
         if not(prev_number is None or curr_number is None):
             if any((curr_number > prev_number)[:2]):
                 diff_number = curr_number - prev_number
+
+                # TODO: computation is incorrect as new mail is counted twice
+                #  once for new, once for unread
                 diff_new = max(0, diff_number.new)
                 diff_unread = max(0, diff_number.unread)
 
