@@ -4,18 +4,8 @@ Simple script which notifies user when a new mail comes in.
 
 Works by keeping track of unread mail and notifying user when it increases.
 
-TODO: switch from notify2 library to calling notify-send via subprocesses?
-    - notify2 seems to run into a dbus issue that prevents it from ever showing a
-      message (after a certain point).
-    - not clear how much support notify2 is going to have anyways. notify-send
-      looks like it'll be supported for much much longer.
-    - test on a branch
-
 TODO: program arguments
     config file?
-
-TODO: handle import errors for notify2?
-    Continue running and use another method vs quiting?
 
 TODO: more logging?
 
@@ -45,7 +35,6 @@ import sys
 import time
 
 # 3rd party modules
-import notify2
 
 
 # constants
@@ -165,14 +154,10 @@ def notify(diff_new, diff_unread):
     msg = '%d new and %d unread mail arrived' % (diff_new, diff_unread)
 
     # TODO: icon?
-    notif = notify2.Notification('New Mail', msg)
-    notif.set_category('email.arrived')
     # TODO: urgency?
 
-    # TODO: show() sometimes fails with a DBusException
     try:
-        logger.debug('Calling show')
-        notif.show()
+        subprocess.check_call(['notify-send', '-c', 'email.arrived', 'New Mail', msg])
     except Exception:
         logger.exception('Failed to show notification')
         return False
@@ -189,16 +174,12 @@ def mail_notifier():
 
     Will update prev_number in all cases except when notification fails
     '''
-    notify2.init('mail_notifier')
-
     prev_number = None
 
     while True:
         curr_number = get_number_mail()
 
         one_is_None = prev_number is None or curr_number is None
-
-        logger.debug('prev, curr = %s, %s' % (prev_number, curr_number))
 
         notification_failed = False
         if not one_is_None:
