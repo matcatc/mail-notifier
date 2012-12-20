@@ -10,7 +10,7 @@ TODO: program arguments
 TODO: handle import errors for notify2?
     Continue running and use another method vs quiting?
 
-TODO: logging?
+TODO: more logging?
 
 @license
     This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,10 @@ TODO: logging?
 '''
 
 # standard modules
+import logging
+import logging.handlers
 import subprocess
+import sys
 import time
 
 # 3rd party modules
@@ -43,6 +46,30 @@ SLEEP_TIME = 10
 
 # msg claws-mail output when its not running. Unlikely to change, but could.
 CLAWS_MAIL_NOT_RUNNING = '0 Claws Mail not running.'
+
+
+def setup_logging(log_level = logging.DEBUG, address = '/dev/log'):
+    '''
+    Sets up the logging for the program.
+
+    Returns the logger
+    '''
+    logger = logging.getLogger(__name__)
+    logger.setLevel(log_level)
+
+    # syslog handler
+    syslog_handler = logging.handlers.SysLogHandler(address = address)
+    syslog_formater = logging.Formatter('%(module)s[%(process)d] - %(levelname)s: %(message)s')
+    syslog_handler.setFormatter(syslog_formater)
+    logger.addHandler(syslog_handler)
+
+    # stderr handler
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    logger.addHandler(stderr_handler)
+
+    return logger
+
+logger = setup_logging()
 
 
 class MailInfo:
@@ -136,9 +163,9 @@ def notify(diff_new, diff_unread):
     notif.show()
 
 
-def main():
+def mail_notifier():
     '''
-    Main function.
+    Workhorse function which detects mail and notifies us about it.
 
     Loop which continuously checks the number of new/unread messages and
     notifies if either increases.
@@ -165,6 +192,25 @@ def main():
         time.sleep(SLEEP_TIME)
 
 
+def main():
+    '''
+    Main function.
+    
+    Simply an outside wrapper around the workhorse function. Serves to catch
+    all exception and do logging stuff.
+    '''
+    try:
+        logger.info('Starting')
+
+        mail_notifier()
+
+    except KeyboardInterrupt:
+        logger.info('Received Ctrl-C, so quiting')
+    except Exception as e:
+        logger.exception('Quitting due to unhandled exception')
+
+
 if __name__ == '__main__':
     main()
+
 
