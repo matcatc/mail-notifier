@@ -151,6 +151,8 @@ def notify(diff_new, diff_unread):
 
     @note
     Keeping simple for now and hard coding to just use notify-send (actually using pynotify2).
+
+    @return Bool indicating whether the notification was sucessful. True = Succesful.
     '''
     msg = '%d new and %d unread mail arrived' % (diff_new, diff_unread)
 
@@ -160,7 +162,14 @@ def notify(diff_new, diff_unread):
     # TODO: urgency?
 
     # TODO: show() sometimes fails with a DBusException
-    notif.show()
+    try:
+        logger.debug('Calling show')
+        notif.show()
+    except Exception:
+        logger.exception('Failed to show notification')
+        return False
+
+    return True
 
 
 def mail_notifier():
@@ -169,6 +178,8 @@ def mail_notifier():
 
     Loop which continuously checks the number of new/unread messages and
     notifies if either increases.
+
+    Will update prev_number in all cases except when notification fails
     '''
     notify2.init('mail_notifier')
 
@@ -177,7 +188,12 @@ def mail_notifier():
     while True:
         curr_number = get_number_mail()
 
-        if not(prev_number is None or curr_number is None):
+        one_is_None = prev_number is None or curr_number is None
+
+        logger.debug('prev, curr = %s, %s' % (prev_number, curr_number))
+
+        notification_failed = False
+        if not one_is_None:
             if any((curr_number > prev_number)[:2]):
                 diff_number = curr_number - prev_number
 
@@ -186,9 +202,11 @@ def mail_notifier():
                 diff_new = max(0, diff_number.new)
                 diff_unread = max(0, diff_number.unread)
 
-                notify(diff_new, diff_unread)
+                notification_failed = not notify(diff_new, diff_unread)
 
-        prev_number = curr_number
+        if not notification_failed:
+            prev_number = curr_number
+            
         time.sleep(SLEEP_TIME)
 
 
