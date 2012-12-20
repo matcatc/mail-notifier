@@ -4,6 +4,13 @@ Simple script which notifies user when a new mail comes in.
 
 Works by keeping track of unread mail and notifying user when it increases.
 
+TODO: switch from notify2 library to calling notify-send via subprocesses?
+    - notify2 seems to run into a dbus issue that prevents it from ever showing a
+      message (after a certain point).
+    - not clear how much support notify2 is going to have anyways. notify-send
+      looks like it'll be supported for much much longer.
+    - test on a branch
+
 TODO: program arguments
     config file?
 
