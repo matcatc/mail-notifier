@@ -61,6 +61,7 @@ def setup_logging(log_level = logging.DEBUG, address = '/dev/log'):
     syslog_handler = logging.handlers.SysLogHandler(address = address)
     syslog_formater = logging.Formatter('%(module)s[%(process)d] - %(levelname)s: %(message)s')
     syslog_handler.setFormatter(syslog_formater)
+    syslog_handler.setLevel(logging.INFO)           # don't send debug messages to syslog
     logger.addHandler(syslog_handler)
 
     # stderr handler
