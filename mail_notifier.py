@@ -186,10 +186,11 @@ def mail_notifier():
             if any((curr_number > prev_number)[:2]):
                 diff_number = curr_number - prev_number
 
-                # TODO: computation is incorrect as new mail is counted twice
-                #  once for new, once for unread
+                # computation is incorrect as new mail is counted twice once
+                #  for new, once for unread. So unread = unread - new.
                 diff_new = max(0, diff_number.new)
                 diff_unread = max(0, diff_number.unread)
+                diff_unread = diff_unread - diff_new
 
                 notification_failed = not notify(diff_new, diff_unread)
 
