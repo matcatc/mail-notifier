@@ -130,6 +130,8 @@ def get_number_mail():
     This function is dependent on what mail client you use. I use claws and to
     keep it simple, I just hard-coded it.
 
+    TODO: data validation?
+
     @return MailInfo if was able to get the data. None if not.
     '''
     data = subprocess.check_output(['claws-mail', '--status'],
@@ -139,7 +141,12 @@ def get_number_mail():
         return None
 
     data = tuple(map(int, data.split()))
-    return MailInfo(data[0], data[1], data[2])
+    try:
+        return MailInfo(data[0], data[1], data[2])
+    except IndexError as e:
+        logger.exception('Exiting b/c data malformed')
+        logger.error('data: %r' % data)
+        quit(1)     # TODO: exit-code
 
 
 def notify(diff_new, diff_unread):
