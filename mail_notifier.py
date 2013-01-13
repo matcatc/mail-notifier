@@ -145,7 +145,7 @@ def get_number_mail():
         return MailInfo(data[0], data[1], data[2])
     except IndexError as e:
         logger.exception('Exiting b/c data malformed')
-        logger.error('data: %r' % data)
+        logger.error('data: %s' % str(data))
         quit(1)     # TODO: exit-code
 
 
