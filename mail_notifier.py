@@ -134,18 +134,20 @@ def get_number_mail():
 
     @return MailInfo if was able to get the data. None if not.
     '''
-    data = subprocess.check_output(['claws-mail', '--status'],
+    orig_data = subprocess.check_output(['claws-mail', '--status'],
                                     universal_newlines=True)
 
-    if data.strip() == CLAWS_MAIL_NOT_RUNNING:
+    data = orig_data.strip()
+
+    if data == CLAWS_MAIL_NOT_RUNNING:
         return None
 
-    data = tuple(map(int, data.split()))
+    int_data = tuple(map(int, data.split()))
     try:
-        return MailInfo(data[0], data[1], data[2])
+        return MailInfo(int_data[0], int_data[1], int_data[2])
     except IndexError as e:
         logger.exception('Exiting b/c data malformed')
-        logger.error('data: %s' % str(data))
+        logger.error("orig_data: '%s', data: '%s', int_data: '%s'" % (str(orig_data), str(data), str(int_data)))
         quit(1)     # TODO: exit-code
 
 
