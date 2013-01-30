@@ -44,6 +44,20 @@ SLEEP_TIME = 10
 CLAWS_MAIL_NOT_RUNNING = '0 Claws Mail not running.'
 
 
+#
+## Exceptions
+#
+
+class NoDataException(Exception):
+    '''
+    Exception indicating no data was found.
+    '''
+    pass
+
+#
+## Logging
+#
+
 def setup_logging(log_level = logging.DEBUG, address = '/dev/log'):
     '''
     Sets up the logging for the program.
@@ -130,6 +144,11 @@ def get_number_mail():
     This function is dependent on what mail client you use. I use claws and to
     keep it simple, I just hard-coded it.
 
+    Sometimes the data returned from the subprocess call will be just an empty
+    string. IE: we have no idea whether the program is running or how many
+    emails there are. I feel the best approach in this case is to simply skip
+    this iteration of the loop. To do this, we throw an NoDataException.
+
     TODO: data validation?
 
     @return MailInfo if was able to get the data. None if not.
@@ -138,6 +157,10 @@ def get_number_mail():
                                     universal_newlines=True)
 
     data = orig_data.strip()
+
+    if len(data) == 0:
+        logger.error('data is empty string, raising NoDataException')
+        raise NoDataException
 
     if data == CLAWS_MAIL_NOT_RUNNING:
         return None
@@ -186,7 +209,13 @@ def mail_notifier():
     prev_number = None
 
     while True:
-        curr_number = get_number_mail()
+        # if there's no data, recycle the previous number so as to prevent us
+        # from doing anything this loop.
+        try:
+            curr_number = get_number_mail()
+        except NoDataException:
+            logger.info('Caught NoDataException, so recycling previous numbers.')
+            curr_number = prev_number
 
         one_is_None = prev_number is None or curr_number is None
 
