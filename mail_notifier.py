@@ -1,8 +1,11 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.3
 '''
 Simple script which notifies user when a new mail comes in.
 
 Works by keeping track of unread mail and notifying user when it increases.
+
+Requires python3.3 because it uses the subprocess timeouts, which was added in
+python3.3.
 
 TODO: program arguments
     config file?
@@ -39,6 +42,7 @@ import time
 
 # constants
 SLEEP_TIME = 10
+MAIL_INFO_TIMEOUT = 5       # should return in < 1 second, but we're in no rush.
 
 # msg claws-mail output when its not running. Unlikely to change, but could.
 CLAWS_MAIL_NOT_RUNNING = '0 Claws Mail not running.'
@@ -149,12 +153,20 @@ def get_number_mail():
     emails there are. I feel the best approach in this case is to simply skip
     this iteration of the loop. To do this, we throw an NoDataException.
 
+    If the subprocess call times out, just assume no data returned. Ie skip
+    this iteration and try again later.
+
     TODO: data validation?
 
     @return MailInfo if was able to get the data. None if not.
     '''
-    orig_data = subprocess.check_output(['claws-mail', '--status'],
-                                    universal_newlines=True)
+    try:
+        orig_data = subprocess.check_output(['claws-mail', '--status'],
+                                    universal_newlines=True,
+                                    timeout=MAIL_INFO_TIMEOUT)
+    except subprocess.TimeoutExpired as e:
+        logger.error('Subprocess call to %s timed out after %d seconds. Data retrieved thus far is %s, but cannot use it.', e.cmd, e.timeout, e.output)
+        orig_data = ''
 
     data = orig_data.strip()
 
@@ -238,6 +250,18 @@ def mail_notifier():
         time.sleep(SLEEP_TIME)
 
 
+# version check for python > 3.3, for subprocess timeout feature.
+def version_check():
+    '''
+    Checks version information on python.
+    '''
+    if not (sys.version_info.major, sys.version_info.minor) >= (3, 3):
+        msg = 'Current python version is %d.%d, version 3.3 required. Quiting.' % (sys.version_info.major, sys.version_info.minor)
+        logger.fatal(msg)
+        print(msg)
+        quit()
+
+
 def main():
     '''
     Main function.
@@ -247,6 +271,8 @@ def main():
     '''
     try:
         logger.info('Starting')
+
+        version_check()
 
         mail_notifier()
 
